@@ -30,7 +30,7 @@ const connectDB = async () => {
     // connection.connection.host tells you which
     // MongoDB server you connected to
     console.log(`
-    ✅ MongoDB Connected
+     MongoDB Connected
     Host : ${connection.connection.host}
     DB   : ${connection.connection.name}
     `);
@@ -39,22 +39,22 @@ const connectDB = async () => {
     // If connection fails, log the error and exit
     // process.exit(1) stops Node.js with failure code
     // We exit because the app is useless without a DB
-    console.error("❌ MongoDB connection failed:", error.message);
+    console.error(" MongoDB connection failed:", error.message);
     process.exit(1);
   }
 };
 
-// ── Connection event listeners ────────────────────────────────
+//  Connection event listeners 
 // These fire after initial connection
 
 // Fires when connection is lost (e.g. Atlas goes down)
 mongoose.connection.on("disconnected", () => {
-  console.warn("⚠️  MongoDB disconnected");
+  console.warn("  MongoDB disconnected");
 });
 
 // Fires when Mongoose reconnects automatically
 mongoose.connection.on("reconnected", () => {
-  console.log("🔄 MongoDB reconnected");
+  console.log("MongoDB reconnected");
 });
 
 module.exports = connectDB;

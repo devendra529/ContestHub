@@ -33,7 +33,7 @@ class ApiResponse {
 module.exports = ApiResponse;
 
 
-/* ─── HOW TO USE ────────────────────────────────────────────
+/* HOW TO USE 
  *
  * const ApiResponse = require("../utils/ApiResponse");
  *
@@ -50,4 +50,4 @@ module.exports = ApiResponse;
  * //   success    : true
  * // }
  *
- * ──────────────────────────────────────────────────────────── */
+ * */

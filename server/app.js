@@ -34,10 +34,10 @@ const rateLimit  = require("express-rate-limit");
 
 const errorMiddleware = require("./middleware/error.middleware");
 
-// ── Create Express App ────────────────────────────────────────
+// Create Express App 
 const app = express();
 
-// ── MIDDLEWARE PIPELINE (order matters!) ─────────────────────
+// MIDDLEWARE PIPELINE (order matters!)
 
 /**
  * 1. CORS (Cross-Origin Resource Sharing)
@@ -93,7 +93,7 @@ const limiter = rateLimit({
 });
 app.use("/api", limiter);  // apply only to /api routes
 
-// ── HEALTH CHECK ROUTE ────────────────────────────────────────
+//  HEALTH CHECK ROUTE 
 /**
  * A simple endpoint to verify the server is running.
  * Used by deployment platforms (Render) to check health.
@@ -108,7 +108,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// ── ROUTES ────────────────────────────────────────────────────
+//  ROUTES 
 // Uncomment these as we build each feature (Day 3 onwards)
 // app.use("/api/auth",      authRoutes);
 // app.use("/api/contests",  contestRoutes);
@@ -116,7 +116,7 @@ app.get("/api/health", (req, res) => {
 // app.use("/api/notes",     noteRoutes);
 // app.use("/api/user",      userRoutes);
 
-// ── 404 Handler ───────────────────────────────────────────────
+// 404 Handler 
 // If no route matched, send a clean 404
 app.use((req, res) => {
   res.status(404).json({
@@ -125,7 +125,7 @@ app.use((req, res) => {
   });
 });
 
-// ── GLOBAL ERROR MIDDLEWARE ───────────────────────────────────
+//  GLOBAL ERROR MIDDLEWARE 
 // MUST be last — catches all errors from routes above
 app.use(errorMiddleware);
 

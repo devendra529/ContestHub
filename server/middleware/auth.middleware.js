@@ -1,6 +1,6 @@
 // server/middleware/error.middleware.js
 
-/**
+/*
  * CONCEPT: Express Error Middleware
  * 
  * Normal middleware has 3 params:  (req, res, next)
@@ -19,11 +19,11 @@ const ApiError = require("../utils/ApiError");
 
 const errorMiddleware = (err, req, res, next) => {
 
-  // ── 1. Defaults ──────────────────────────────────────────
+  //  1. Defaults 
   let statusCode = err.statusCode || 500;
   let message    = err.message    || "Internal Server Error";
 
-  // ── 2. Handle specific Mongoose errors ───────────────────
+  //  2. Handle specific Mongoose errors 
 
   // CastError: happens when MongoDB _id format is wrong
   // e.g. /api/contests/not-a-valid-id
@@ -61,12 +61,12 @@ const errorMiddleware = (err, req, res, next) => {
     message    = "Token expired. Please login again";
   }
 
-  // ── 3. Log error in development only ─────────────────────
+  // 3. Log error in development only
   if (process.env.NODE_ENV === "development") {
     console.error("ERROR:", err);
   }
 
-  // ── 4. Send standardized JSON error response ─────────────
+  // 4. Send standardized JSON error response 
   res.status(statusCode).json({
     success    : false,
     statusCode : statusCode,

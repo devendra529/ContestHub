@@ -42,7 +42,7 @@ class ApiError extends Error {
 module.exports = ApiError;
 
 
-/* ─── HOW TO USE ────────────────────────────────────────────
+/*  HOW TO USE 
  *
  * const ApiError = require("../utils/ApiError");
  *
@@ -55,4 +55,4 @@ module.exports = ApiError;
  *   throw new ApiError(401, "Unauthorized - no token");
  * }
  *
- * ──────────────────────────────────────────────────────────── */
+ * */

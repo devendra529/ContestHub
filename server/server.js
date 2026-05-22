@@ -30,7 +30,7 @@ const connectDB = require("./config/db");
 
 const PORT = process.env.PORT || 5000;
 
-// ── Start Server ──────────────────────────────────────────────
+//  Start Server 
 const startServer = async () => {
   try {
 
@@ -44,14 +44,14 @@ const startServer = async () => {
   ║       ContestHub API Server          ║
   ╠══════════════════════════════════════╣
   ║  Status  : Running                   ║
-  ║  Port    : ${PORT}                        ║
-  ║  Mode    : ${process.env.NODE_ENV}         ║
-  ║  URL     : http://localhost:${PORT}   ║
+  ║  Port    : ${PORT}                   ║
+  ║  Mode    : ${process.env.NODE_ENV}   ║
+  ║  URL     : http://localhost:${PORT}  ║
   ╚══════════════════════════════════════╝
       `);
     });
 
-    // ── Graceful Shutdown ─────────────────────────────────────
+    //  Graceful Shutdown 
     /**
      * CONCEPT: Graceful Shutdown
      * 
@@ -75,7 +75,7 @@ const startServer = async () => {
     process.on("SIGTERM", () => shutdown("SIGTERM"));
     process.on("SIGINT",  () => shutdown("SIGINT"));
 
-    // ── Unhandled Errors ──────────────────────────────────────
+    //  Unhandled Errors 
     /**
      * Safety nets — catch any errors that slipped through
      * asyncHandler and weren't caught anywhere else.

@@ -1,4 +1,4 @@
-// WITHOUT asyncHandler — repeated in EVERY controller 😩
+// WITHOUT asyncHandler — repeated in EVERY controller 
 const getContests = async (req, res) => {
   try {
     const contests = await Contest.find();
@@ -41,7 +41,7 @@ const asyncHandler = (fn) => {
 module.exports = asyncHandler;
 
 
-/* ─── HOW TO USE ────────────────────────────────────────────
+/* HOW TO USE 
  *
  * const asyncHandler = require("../utils/asyncHandler");
  *
@@ -54,4 +54,4 @@ module.exports = asyncHandler;
  * // If Contest.find() throws, asyncHandler catches it
  * // and sends it to error.middleware.js automatically
  *
- * ──────────────────────────────────────────────────────────── */
+ **/
