@@ -1,79 +1,58 @@
-// server/middleware/error.middleware.js
+// server/middleware/auth.middleware.js
 
-/*
- * CONCEPT: Express Error Middleware
- * 
- * Normal middleware has 3 params:  (req, res, next)
- * Error middleware has 4 params:   (err, req, res, next)
- * 
- * Express identifies error middleware by the 4-argument
- * signature. When next(error) is called anywhere in the
- * app, Express skips all normal middleware and jumps
- * directly to this function.
- * 
- * This must be registered LAST in app.js — after all
- * routes — so it can catch errors from any route.
- */
-
+const jwt      = require("jsonwebtoken");
+const User     = require("../models/User.model");
 const ApiError = require("../utils/ApiError");
 
-const errorMiddleware = (err, req, res, next) => {
+const verifyToken = async (req, res, next) => {
+  try {
 
-  //  1. Defaults 
-  let statusCode = err.statusCode || 500;
-  let message    = err.message    || "Internal Server Error";
+    // token comes in the Authorization header like this:
+    // Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    //
+    // we split on the space and take the second part
+    // req.headers.authorization gives us the full string
 
-  //  2. Handle specific Mongoose errors 
+    const authHeader = req.headers.authorization;
 
-  // CastError: happens when MongoDB _id format is wrong
-  // e.g. /api/contests/not-a-valid-id
-  if (err.name === "CastError") {
-    statusCode = 400;
-    message    = `Invalid ${err.path}: ${err.value}`;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      throw new ApiError(401, "Access denied. No token provided");
+    }
+
+    // "Bearer eyJ..." → split(" ") → ["Bearer", "eyJ..."] → [1]
+    const token = authHeader.split(" ")[1];
+
+    if (!token) {
+      throw new ApiError(401, "Access denied. Token missing");
+    }
+
+    // jwt.verify does two things:
+    // 1. checks the signature using our JWT_SECRET
+    // 2. checks the expiry
+    // if either fails it throws an error which our
+    // error middleware catches and returns as a 401
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // decoded looks like: { _id: "64abc...", iat: 1234567890, exp: 1234567890 }
+    // we use the _id to fetch the actual user from DB
+    // this ensures that if a user was deleted, their old
+    // token no longer works
+    const user = await User.findById(decoded._id);
+
+    if (!user) {
+      throw new ApiError(401, "User belonging to this token no longer exists");
+    }
+
+    // attach user to request so every controller
+    // downstream can access it via req.user
+    req.user = user;
+
+    // pass control to the next middleware or controller
+    next();
+
+  } catch (error) {
+    next(error);
   }
-
-  // ValidationError: Mongoose schema validation failed
-  // e.g. required field missing, wrong type
-  if (err.name === "ValidationError") {
-    statusCode = 400;
-    // Extract all validation messages into one string
-    message = Object.values(err.errors)
-      .map((val) => val.message)
-      .join(", ");
-  }
-
-  // Duplicate key error (MongoDB error code 11000)
-  // e.g. trying to signup with an email already in DB
-  if (err.code === 11000) {
-    statusCode = 409; // 409 = Conflict
-    const field = Object.keys(err.keyValue)[0]; // e.g. "email"
-    message    = `${field} already exists`;
-  }
-
-  // JWT errors
-  if (err.name === "JsonWebTokenError") {
-    statusCode = 401;
-    message    = "Invalid token. Please login again";
-  }
-
-  if (err.name === "TokenExpiredError") {
-    statusCode = 401;
-    message    = "Token expired. Please login again";
-  }
-
-  // 3. Log error in development only
-  if (process.env.NODE_ENV === "development") {
-    console.error("ERROR:", err);
-  }
-
-  // 4. Send standardized JSON error response 
-  res.status(statusCode).json({
-    success    : false,
-    statusCode : statusCode,
-    message    : message,
-    // Only show stack trace in development
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
-  });
 };
 
-module.exports = errorMiddleware;
+module.exports = verifyToken;

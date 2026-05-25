@@ -1,4 +1,20 @@
 // server/middleware/error.middleware.js
+// Client Request → Middleware → Route/Controller → Response
+/*Middleware acts like security checking:
+
+-Identity
+-Permissions
+-Dangerous items
+
+before allowing access.
+*/
+
+/*Imagine airport security:
+
+Passenger → Security Check → Boarding Gate
+*/
+// Global error handling middleware for Express
+
 const ApiError = require("../utils/ApiError");
 
 const errorMiddleware = (err, req, res, next) => {
