@@ -1,4 +1,5 @@
 // client/src/components/layout/Layout.jsx
+// it is the main layout components which raps all the pages
 
 import { useState } from "react";
 
