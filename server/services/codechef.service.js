@@ -1,37 +1,45 @@
+// server/services/codechef.service.js
+
 const axios = require("axios")
 
 const fetchCodechefContests = async () => {
   try {
     console.log("Fetching CodeChef contests...")
 
+    // CodeChef public contests API — no key needed
     const response = await axios.get(
-      "https://clist.by/api/v4/contest/",
+      "https://www.codechef.com/api/list/contests/all",
       {
         timeout: 15000,
-        params: {
-          resource    : "codechef.com",
-          order_by    : "start",
-          limit       : 10,
-          format_time : true,
+        params : {
+          sort_by   : "START",
+          sorting_order: "asc",
+          offset    : 0,
+          mode      : "all",
         },
         headers: {
-          Authorization: `ApiKey ${process.env.CLIST_API_KEY}`,
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         },
       }
     )
 
-    const data = response.data?.objects
+    const data = response.data
 
-    if (!Array.isArray(data)) {
-      console.error("CodeChef unexpected response:", response.data)
+    if (!data) {
+      console.error("CodeChef unexpected response")
       return []
     }
 
-    const now = new Date()
+    const now      = new Date()
+    const allContests = [
+      ...(data.future_contests  || []),
+      ...(data.present_contests || []),
+      ...(data.past_contests    || []).slice(0, 5),
+    ]
 
-    const contests = data.map((c) => {
-      const startTime = new Date(c.start)
-      const endTime   = new Date(c.end)
+    const contests = allContests.map((c) => {
+      const startTime = new Date(c.contest_start_date_iso || c.contest_start_date)
+      const endTime   = new Date(c.contest_end_date_iso   || c.contest_end_date)
       const duration  = Math.floor((endTime - startTime) / 1000)
 
       let status = "upcoming"
@@ -39,13 +47,13 @@ const fetchCodechefContests = async () => {
       if (now > endTime)                      status = "past"
 
       return {
-        externalId: String(c.id),
+        externalId: c.contest_code,
         platform  : "codechef",
-        name      : c.event,
+        name      : c.contest_name,
         startTime,
         endTime,
         duration,
-        url       : c.href,
+        url       : `https://www.codechef.com/${c.contest_code}`,
         status,
       }
     })
@@ -55,10 +63,6 @@ const fetchCodechefContests = async () => {
 
   } catch (error) {
     console.error("CodeChef fetch failed:", error.message)
-    if (error.response) {
-      console.error("Response status:", error.response.status)
-      console.error("Response data:",   error.response.data)
-    }
     return []
   }
 }
