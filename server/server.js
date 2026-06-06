@@ -1,15 +1,11 @@
-// server/server.js
-
 require("dotenv").config();
 
-const app                  = require("./app");
-const connectDB            = require("./config/db");
+const app = require("./app");
+const connectDB = require("./config/db");
 const { verifyEmailConnection } = require("./config/nodemailer");
-const startReminderJob     = require("./jobs/reminder.job");
+const startReminderJob = require("./jobs/reminder.job");
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
@@ -18,17 +14,16 @@ const startServer = async () => {
 
     const server = app.listen(PORT, () => {
       console.log(`
-  ╔══════════════════════════════════════╗
-  ║       ContestHub API Server          ║
-  ╠══════════════════════════════════════╣
-  ║  Status : Running                    ║
-  ║  Port   : ${PORT}                    ║
-  ║  Mode   : ${process.env.NODE_ENV}    ║
-  ╚══════════════════════════════════════╝
+╔══════════════════════════════════════╗
+║       ContestHub API Server          ║
+╠══════════════════════════════════════╣
+║  Status : Running                    ║
+║  Port   : ${PORT}
+║  Mode   : ${process.env.NODE_ENV || "development"}
+╚══════════════════════════════════════╝
       `);
     });
 
-    // start the email reminder cron job
     startReminderJob();
 
     const shutdown = (signal) => {
@@ -37,7 +32,7 @@ const startServer = async () => {
     };
 
     process.on("SIGTERM", () => shutdown("SIGTERM"));
-    process.on("SIGINT",  () => shutdown("SIGINT"));
+    process.on("SIGINT", () => shutdown("SIGINT"));
 
     process.on("unhandledRejection", (reason) => {
       console.error("Unhandled Rejection:", reason);
