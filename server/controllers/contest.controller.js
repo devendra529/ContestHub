@@ -4,8 +4,6 @@ const ApiError          = require("../utils/ApiError")
 const ApiResponse       = require("../utils/ApiResponse")
 const asyncHandler      = require("../utils/asyncHandler")
 
-// GET /api/contests
-// always fetches fresh data — no cache check
 const getContests = asyncHandler(async (req, res) => {
   const {
     platform,
@@ -15,10 +13,16 @@ const getContests = asyncHandler(async (req, res) => {
     limit = 50,
   } = req.query
 
-  // always fetch fresh from external APIs
-  await aggregateContests()
+  // check if we have fresh data in last 30 minutes
+  const fresh = await Contest.findOne({
+    fetchedAt: { $gte: new Date(Date.now() - 30 * 60 * 1000) },
+  })
 
-  // build filter query
+  if (!fresh) {
+    console.log("Cache stale — fetching fresh data...")
+    await aggregateContests()
+  }
+
   const query = {}
 
   if (platform && platform !== "all") {
@@ -55,7 +59,6 @@ const getContests = asyncHandler(async (req, res) => {
   )
 })
 
-// GET /api/contests/:id
 const getContestById = asyncHandler(async (req, res) => {
   const contest = await Contest.findById(req.params.id)
 

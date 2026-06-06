@@ -5,195 +5,136 @@ import {
   useMemo,
   useState,
   useEffect,
+  useContext,
 } from "react";
 
 import API from "../api/axios";
 
-// Context
-export const ContestContext =
-  createContext(null);
+export const ContestContext = createContext(null);
 
-// Provider
-export const ContestProvider = ({
-  children,
-}) => {
+export const ContestProvider = ({ children }) => {
+  const [contests, setContests] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // States
-  const [contests, setContests] =
-    useState([]);
+  const [filters, setFilters] = useState({
+    platform: "all",
+    status: "all",
+    search: "",
+  });
 
-  const [isLoading, setIsLoading] =
-    useState(false);
+  const fetchContests = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-  const [error, setError] =
-    useState(null);
+      const response = await API.get("/contests");
 
-  // Filters
-  const [filters, setFilters] =
-    useState({
+      console.log("API Response:", response.data);
 
-      platform: "all",
+      const contestData =
+        response?.data?.data?.contests || [];
 
-      status: "upcoming",
-
-      search: "",
-
-    });
-
-  // Fetch Contests
-  const fetchContests =
-    async () => {
-
-      try {
-
-        setIsLoading(true);
-
-        setError(null);
-
-        const response =
-          await API.get(
-            "/contests"
-          );
-
-        setContests(
-
-          response.data.data
-            ?.contests || []
-
-        );
-
-      } catch (err) {
-
-        console.error(
-          "Contest fetch error:",
-          err
-        );
-
-        setError(
-
-          err.response?.data
-            ?.message ||
-
-          "Failed to fetch contests"
-
-        );
-
-      } finally {
-
-        setIsLoading(false);
-
-      }
-    };
-
-  // Fetch On Mount
-  useEffect(() => {
-
-    fetchContests();
-
-  }, []);
-
-  // Filtered Contests
-  const filteredContests =
-    useMemo(() => {
-
-      return contests.filter(
-        (contest) => {
-
-          const platformMatch =
-
-            filters.platform ===
-              "all" ||
-
-            contest.platform ===
-              filters.platform;
-
-          const statusMatch =
-
-            filters.status ===
-              "all" ||
-
-            contest.status ===
-              filters.status;
-
-          const searchMatch =
-
-            contest.name
-              ?.toLowerCase()
-              .includes(
-
-                filters.search
-                  .toLowerCase()
-
-              );
-
-          return (
-
-            platformMatch &&
-            statusMatch &&
-            searchMatch
-
-          );
-        }
+      console.log(
+        "Fetched Contests:",
+        contestData.length
       );
 
-    }, [contests, filters]);
+      setContests(contestData);
 
-  // Update Filter
+    } catch (err) {
+      console.error(
+        "Contest fetch error:",
+        err
+      );
+
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to fetch contests"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContests();
+  }, []);
+
+  const filteredContests = useMemo(() => {
+    return contests.filter((contest) => {
+
+      const platformMatch =
+        filters.platform === "all" ||
+        contest.platform?.toLowerCase() ===
+          filters.platform?.toLowerCase();
+
+      const statusMatch =
+        filters.status === "all" ||
+        contest.status === filters.status;
+
+      const searchMatch =
+        !filters.search.trim() ||
+        contest.name
+          ?.toLowerCase()
+          .includes(
+            filters.search.toLowerCase()
+          );
+
+      return (
+        platformMatch &&
+        statusMatch &&
+        searchMatch
+      );
+    });
+  }, [contests, filters]);
+
   const updateFilter = (
     key,
     value
   ) => {
-
     setFilters((prev) => ({
-
       ...prev,
-
       [key]: value,
-
     }));
   };
 
-  // Clear Filters
   const clearFilters = () => {
-
     setFilters({
-
       platform: "all",
-
-      status: "upcoming",
-
+      status: "all",
       search: "",
-
     });
   };
 
   return (
-
     <ContestContext.Provider
       value={{
-
         contests,
-
         filteredContests,
-
         isLoading,
-
         error,
-
         filters,
-
         updateFilter,
-
         clearFilters,
-
         fetchContests,
-
       }}
     >
-
       {children}
-
     </ContestContext.Provider>
-
   );
+};
+
+export const useContests = () => {
+  const context =
+    useContext(ContestContext);
+
+  if (!context) {
+    throw new Error(
+      "useContests must be used inside ContestProvider"
+    );
+  }
+
+  return context;
 };

@@ -1,78 +1,91 @@
-// server/services/leetcode.service.js
-
-const axios = require("axios")
+const axios = require("axios");
 
 const fetchLeetcodeContests = async () => {
   try {
-    console.log("Fetching LeetCode contests...")
+    console.log("Fetching LeetCode contests...");
 
-    // LeetCode has a public GraphQL API — no key needed
-    const response = await axios.post(
-      "https://leetcode.com/graphql",
-      {
-        query: `
-          {
-            allContests {
-              title
-              titleSlug
-              startTime
-              duration
-            }
-          }
-        `,
-      },
+    const response = await axios.get(
+      "https://lccn.lbao.site/api/v1/contest/upcoming",
       {
         timeout: 15000,
         headers: {
-          "Content-Type": "application/json",
-          "Referer"     : "https://leetcode.com",
+          "User-Agent": "Mozilla/5.0",
+          Accept: "application/json",
         },
       }
-    )
+    );
 
-    const allContests = response.data?.data?.allContests
+    const data = response?.data?.data || [];
 
-    if (!Array.isArray(allContests)) {
-      console.error("LeetCode GraphQL unexpected response")
-      return []
+    if (!Array.isArray(data)) {
+      console.error("Invalid LeetCode response");
+      return [];
     }
 
-    const now        = new Date()
-    const sevenDays  = 7 * 24 * 60 * 60 * 1000
+    const now = new Date();
 
-    const contests = allContests
-      .filter((c) => {
-        const startMs = c.startTime * 1000
-        const endMs   = startMs + c.duration * 1000
-        return endMs > now.getTime() - sevenDays
-      })
-      .map((c) => {
-        const startTime = new Date(c.startTime * 1000)
-        const endTime   = new Date((c.startTime + c.duration) * 1000)
+    const contests = data.map((contest) => {
+      const startTime = new Date(
+        contest.startTime * 1000
+      );
 
-        let status = "upcoming"
-        if (now >= startTime && now <= endTime) status = "live"
-        if (now > endTime)                      status = "past"
+      const endTime = new Date(
+        (contest.startTime + contest.duration) *
+          1000
+      );
 
-        return {
-          externalId: c.titleSlug,
-          platform  : "leetcode",
-          name      : c.title,
-          startTime,
-          endTime,
-          duration  : c.duration,
-          url       : `https://leetcode.com/contest/${c.titleSlug}`,
-          status,
-        }
-      })
+      let status = "upcoming";
 
-    console.log(`LeetCode: ${contests.length} contests fetched`)
-    return contests
+      if (
+        now >= startTime &&
+        now <= endTime
+      ) {
+        status = "live";
+      } else if (now > endTime) {
+        status = "past";
+      }
 
+      return {
+        externalId:
+          contest.titleSlug ||
+          String(contest.title),
+
+        platform: "leetcode",
+
+        name: contest.title,
+
+        startTime,
+
+        endTime,
+
+        duration: contest.duration,
+
+        url: `https://leetcode.com/contest/${contest.titleSlug}`,
+
+        status,
+      };
+    });
+
+    console.log(
+      `LeetCode contests fetched: ${contests.length}`
+    );
+
+    return contests;
   } catch (error) {
-    console.error("LeetCode fetch failed:", error.message)
-    return []
-  }
-}
+    console.error(
+      "LeetCode fetch failed:",
+      error.message
+    );
 
-module.exports = fetchLeetcodeContests
+    if (error.response) {
+      console.error(
+        "Status:",
+        error.response.status
+      );
+    }
+
+    return [];
+  }
+};
+
+module.exports = fetchLeetcodeContests;

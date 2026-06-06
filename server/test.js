@@ -1,4 +1,6 @@
-const Contest = require("./models/Contest.model");
+const fetchLeetcodeContests = require("./services/leetcode.service");
 
-const data = await Contest.find({ platform: "leetcode" });
-console.log(data.length);
+(async () => {
+  const contests = await fetchLeetcodeContests();
+  console.log(JSON.stringify(contests, null, 2));
+})();
